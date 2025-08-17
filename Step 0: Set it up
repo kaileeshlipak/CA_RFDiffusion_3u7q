@@ -1,0 +1,65 @@
+#1 extract motif from PDB
+fetch 3u7q
+select scs_residues, (resi 275+442+195+191+96+359) and chain C
+select scs_ca, scs_residues and name CA
+save scs_motif_ca.pdb, scs_ca
+
+#1a download necessary checkpoint 
+wget https://files.ipd.uw.edu/pub/ca_rfd/ca_rfd_diffusion.pt
+________________________________________________________________
+#2 renumber motif for RFDiffusion
+from Bio.PDB import PDBParser, PDBIO, Structure, Model, Chain
+
+parser = PDBParser(QUIET=True)
+structure = parser.get_structure("motif", "scs_motif_ca.pdb")
+
+new_structure = Structure.Structure("renumbered")
+new_model = Model.Model(0)
+new_chain = Chain.Chain("A")
+
+residue_counter = 1
+for model in structure:
+    for chain in model:
+        for residue in chain:
+            new_res_id = (' ', residue_counter, ' ')
+            new_residue = residue.copy()
+            new_residue.id = new_res_id
+            new_chain.add(new_residue)
+            residue_counter += 1
+
+new_model.add(new_chain)
+new_structure.add(new_model)
+
+io = PDBIO()
+io.set_structure(new_structure)
+io.save("scs_motif_ca_renumbered.pdb")
+__________________________________________
+
+#3 fix NVTX issue 
+nvtx_file = "/work/10391/kaileeshlipak/ls6/miniconda/envs/ca_rfd_release/lib/python3.9/site-packages/torch/cuda/nvtx.py"
+
+new_content = '''from contextlib import nullcontext
+
+def range(msg):
+    return nullcontext()
+
+def range_push(msg):
+    return None
+
+def range_pop():
+    return None
+
+def mark(msg):
+    return None
+
+rangePushA = range_push
+rangePop = range_pop
+
+def _fail(msg):
+    return None
+
+libnvtx = None
+'''
+
+with open(nvtx_file, 'w') as f:
+    f.write(new_content)
