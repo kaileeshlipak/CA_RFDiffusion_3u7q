@@ -1,6 +1,30 @@
-#1 extract motif from PDB
+#1 extract motif from PDB with native-mimicking spacing between residues
 fetch 3u7q
-select scs_residues, (resi 275+442+195+191+96+359) and chain C
+
+# Define your 6 SCS residues in desired order
+select arg96, chain C and resi 96 and name CA
+select gln191, chain C and resi 191 and name CA  
+select his195, chain C and resi 195 and name CA
+select cys275, chain C and resi 275 and name CA
+select arg359, chain C and resi 359 and name CA
+select his442, chain C and resi 442 and name CA
+
+# Measure distances between consecutive residues in your desired arrangement
+distance d1, arg96, gln191
+distance d2, gln191, his195  
+distance d3, his195, cys275
+distance d4, cys275, arg359
+distance d5, arg359, his442
+
+# Print the exact distances
+print "Arg96 to Gln191:", cmd.get_distance("arg96", "gln191")
+print "Gln191 to His195:", cmd.get_distance("gln191", "his195") 
+print "His195 to Cys275:", cmd.get_distance("his195", "cys275")
+print "Cys275 to Arg359:", cmd.get_distance("cys275", "arg359")
+print "Arg359 to His442:", cmd.get_distance("arg359", "his442")
+
+# Extract all 6 CA atoms as motif
+select scs_residues, (resi 96+191+195+275+359+442) and chain C
 select scs_ca, scs_residues and name CA
 save scs_motif_ca.pdb, scs_ca
 
