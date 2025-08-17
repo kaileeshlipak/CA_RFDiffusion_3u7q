@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH -J ca_rfdiffusion
+#SBATCH -o rfdiffusion_%j.out
+#SBATCH -e rfdiffusion_%j.err
+#SBATCH -p gpu-a100
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH -t 04:00:00
+#SBATCH -A CHE23010
+
+module load gcc/12.2.0
+module load cuda/12.2
+
+source /work/10391/kaileeshlipak/ls6/miniconda/etc/profile.d/conda.sh
+conda activate ca_rfd_release
+
+cd /work/10391/kaileeshlipak/ls6/CA_RFDiffusion
+
+python run_inference.py \
+  --config-path ./rf_diffusion/config/inference \
+  --config-name RFdiffusion_CA_inference \
+  inference.input_pdb=scs_motif_ca_renumbered.pdb \
+  inference.output_prefix=run_a_outputs/motif_scaffolds \
+  inference.num_designs=200 \
+  inference.ligand=null \
+  contigmap.contigs="['15,A1-1,4,A2-3,3,A4-4,2,A5-5,2,A6-6,15']"
