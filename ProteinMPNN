@@ -21,3 +21,25 @@ for pdb_file in /work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0821/re
         --sampling_temp 0.1 \
         --seed 37
 done
+
+#formatting the fasta sequences better
+import os
+
+def format_fasta_sequences(output_dir):
+    for filename in os.listdir(output_dir):
+        if filename.endswith('.fa') or filename.endswith('.fasta'):
+            print(f"\n=== {filename} ===")
+            with open(os.path.join(output_dir, filename), 'r') as f:
+                content = f.read().strip()
+                lines = content.split('\n')
+                
+               	for i in range(0, len(lines), 2):
+                    if i+1 < len(lines):
+                        header = lines[i]
+                        sequence = lines[i+1]
+                        print(f"{header}")
+                        # Break sequence into 80-character lines for readability
+                        for j in range(0, len(sequence), 80):
+                            print(sequence[j:j+80])
+                        print()  # Empty line between sequences
+format_fasta_sequences('seqs')
