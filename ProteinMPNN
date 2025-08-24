@@ -1,0 +1,23 @@
+#downloading protein mpnn and set up
+
+git clone https://github.com/dauparas/ProteinMPNN.git cd ProteinMPNN 
+conda create -n proteinmpnn python=3.8  
+conda activate proteinmpnn  
+conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia  
+pip install biopython numpy 
+
+#running MPNN to loop over all structures in a directory 
+
+conda activate proteinmpnn
+mkdir -p proteinmpnn_output
+
+for pdb_file in /work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0821/refined_0822/*.pdb; do
+    echo "Processing: $pdb_file"
+    python protein_mpnn_run.py \
+        --pdb_path "$pdb_file" \
+        --pdb_path_chains "A" \
+        --out_folder ./proteinmpnn_output \
+        --num_seq_per_target 10 \
+        --sampling_temp 0.1 \
+        --seed 37
+done
