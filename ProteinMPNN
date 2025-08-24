@@ -43,3 +43,38 @@ def format_fasta_sequences(output_dir):
                             print(sequence[j:j+80])
                         print()  # Empty line between sequences
 format_fasta_sequences('seqs')
+
+#converting femoco to json format for AF3 input
+import json
+
+def pdb_to_json(pdb_file):
+    atoms = []
+    
+    with open(pdb_file, 'r') as f:
+        for line in f:
+            if line.startswith('HETATM') or line.startswith('ATOM'):
+                # Parse PDB line format
+                element = line[76:78].strip() or line[12:16].strip()[0]  # Element symbol
+                x = float(line[30:38])
+                y = float(line[38:46]) 
+                z = float(line[46:54])
+                
+               	atoms.append({
+                    "element": element,
+                    "x": x,
+                    "y": y,
+                    "z": z
+                })
+    # Create JSON structure
+    ligand_json = {
+        "atoms": atoms,
+        "name": "FeMoco"
+    } 
+    # Save to file
+    with open('femoco.json', 'w') as f:
+        json.dump(ligand_json, f, indent=2)
+    
+    print(f"Converted {len(atoms)} atoms to JSON format")
+    print("Saved as femoco.json")
+pdb_to_json('FeMoco_only.pdb')
+
