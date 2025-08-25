@@ -1,0 +1,113 @@
+# first: code for creating the json file 
+import os
+import json
+
+def extract_sequences(seqs_dir):
+    sequences = []
+    
+    for filename in os.listdir(seqs_dir):
+        if filename.endswith('.fa'):
+            filepath = os.path.join(seqs_dir, filename)
+            
+            with open(filepath, 'r') as f:
+                content = f.read()
+                
+            entries = content.split('>')[1:]
+            
+            for entry in entries:
+                lines = entry.strip().split('\n')
+                header = lines[0]
+                sequence = ''.join(lines[1:])
+                
+                # Only keep ProteinMPNN designed sequences
+                if 'T=' in header and 'sample=' in header:
+                    # Extract sample number and score for naming
+                    sample_num = header.split('sample=')[1].split(',')[0]
+                    score = header.split('score=')[1].split(',')[0]
+                    
+                    sequences.append({
+                        "sequence": sequence,
+                        "name": f"{filename.replace('.fa', '')}_sample{sample_num}_score{score}",
+                        "filename": filename
+                    })
+    
+    return sequences
+
+# Extract all sequences
+seqs_dir = '/work/10391/kaileeshlipak/ls6/ProteinMPNN/proteinmpnn_output/seqs'
+all_sequences = extract_sequences(seqs_dir)
+
+print(f"Found {len(all_sequences)} sequences")
+
+# Create AF3 JSON with iron-sulfur clusters
+af3_jobs = []
+for i, seq_data in enumerate(all_sequences):
+    job = {
+	"name": seq_data["name"],
+        "modelSeeds": [],
+        "sequences": [
+            {
+             	"proteinChain": {
+                    "sequence": seq_data["sequence"],
+                    "count": 1
+                }
+            },
+            {
+             	"ligand": {
+                    "ligand": "CCD_FES",  # [4Fe-4S] cluster
+                    "count": 2           # Use 2 clusters to get closer to 7-8 Fe atoms
+                }
+            },
+            {
+             	"ion": {
+                    "ion": "MO",         # Add molybdenum
+                    "count": 1
+                }
+            }
+	],
+	"dialect": "alphafoldserver",
+        "version": 1
+    }
+    af3_jobs.append(job)
+
+# Save the JSON file
+with open('femoco_designs_af3.json', 'w') as f:
+    json.dump(af3_jobs, f, indent=4)
+
+print(f"Created femoco_designs_af3.json with {len(af3_jobs)} jobs")
+print("Each job includes:")
+print("- Your protein sequence")
+print("- 2x [4Fe-4S] clusters (CCD_FES)")
+print("- 1 molybdenum ion")
+print("This approximates FeMoco's Fe7MoS9 composition")
+
+## second: splitting the json file when it contains over 100 sequences:
+
+import json
+
+# Load the existing JSON file
+with open('femoco_designs_af3.json', 'r') as f:
+    all_jobs = json.load(f)
+
+print(f"Total jobs: {len(all_jobs)}")
+
+# Split into two halves
+mid_point = len(all_jobs) // 2
+first_half = all_jobs[:mid_point]
+second_half = all_jobs[mid_point:]
+
+print(f"First half: {len(first_half)} jobs")
+print(f"Second half: {len(second_half)} jobs")
+
+# Save first half
+with open('femoco_designs_batch1.json', 'w') as f:
+    json.dump(first_half, f, indent=4)
+
+# Save second half
+with open('femoco_designs_batch2.json', 'w') as f:
+    json.dump(second_half, f, indent=4)
+
+print("Created:")
+print("- femoco_designs_batch1.json")
+print("- femoco_designs_batch2.json")
+print("Upload these files separately to AF3 server")
