@@ -1,12 +1,39 @@
+to run refinement on all the pdbs in a directory (loops over all of them)
+
 module load gcc/12.2.0 
 module load cuda 
-
 eval "$(command conda 'shell.bash' 'hook' 2> /dev/null)" 
 conda activate ca_rfd_release 
 export PYTHONPATH=$PYTHONPATH:/work/10391/kaileeshlipak/ls6/CA_RFDiffusion 
-export PYTHONPATH=$PYTHONPATH:../ 
 
-pdb="/work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0821/unrefined_0825/pt2_0.pdb" 
-CKPT="/work/10391/kaileeshlipak/ls6/CA_RFDiffusion/ca_rfd_refinement.pt" 
+INPUT_DIR="/work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0821/unrefined_0822"
+CKPT="/work/10391/kaileeshlipak/ls6/CA_RFDiffusion/ca_rfd_refinement.pt"
 
-python3 run_inference.py --config-path ./rf_diffusion/config/inference --config-name test_ca_rfd_refinement inference.input_pdb=$pdb inference.output_prefix=designs_nifD0821/refined_0825/0825 inference.ckpt_path=$CKPT inference.ligand=ICS 
+# Change to the CA_RFDiffusion directory
+cd /work/10391/kaileeshlipak/ls6/CA_RFDiffusion
+
+# Count total files for progress tracking
+total_files=$(ls "$INPUT_DIR"/*.pdb 2>/dev/null | wc -l)
+echo "Found $total_files PDB files to process"
+current=0
+
+# Loop over all PDB files in the directory
+for pdb_file in "$INPUT_DIR"/*.pdb; do
+    current=$((current + 1))
+    basename=$(basename "$pdb_file" .pdb)
+    
+    echo "[$current/$total_files] Processing: $basename"
+    
+    python run_inference.py \
+        --config-path ./rf_diffusion/config/inference \
+        --config-name test_ca_rfd_refinement \
+        inference.input_pdb="$pdb_file" \
+        inference.output_prefix="designs_nifD0821/refined_0825/${basename}" \
+        inference.ckpt_path="$CKPT" \
+        inference.ligand=ICS
+    
+    echo "[$current/$total_files] Completed: $basename"
+    echo "---"
+done
+
+echo "All $total_files PDB files processed!"
