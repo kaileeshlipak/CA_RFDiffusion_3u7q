@@ -1,0 +1,81 @@
+# Save as create_af3_femoco_batches_fixed.py
+import os
+import json
+
+def extract_sequences(seqs_dir):
+    sequences = []
+    
+    for filename in os.listdir(seqs_dir):
+        if filename.endswith('.fa'):
+            filepath = os.path.join(seqs_dir, filename)
+            
+            with open(filepath, 'r') as f:
+                content = f.read()
+                
+            entries = content.split('>')[1:]
+            
+            for entry in entries:
+                lines = entry.strip().split('\n')
+                header = lines[0]
+                sequence = ''.join(lines[1:])
+                
+                # Only keep ProteinMPNN designed sequences
+                if 'T=' in header and 'sample=' in header:
+                    sample_num = header.split('sample=')[1].split(',')[0]
+                    score = header.split('score=')[1].split(',')[0]
+                    
+                    clean_filename = filename.replace('.fa', '').replace('.', '_')
+                    
+                    sequences.append({
+                        "sequence": sequence,
+                        "name": f"{clean_filename}_sample{sample_num}_score{score.replace('.', '_')}",
+                        "filename": filename
+                    })
+    
+    return sequences
+
+# Extract all sequences
+seqs_dir = '/work/10391/kaileeshlipak/ls6/ProteinMPNN/proteinmpnn_output/seqs'
+all_sequences = extract_sequences(seqs_dir)
+
+print(f"Found {len(all_sequences)} sequences")
+
+# Create batches of 90 sequences each
+batch_size = 90
+batch_num = 1
+
+for i in range(0, len(all_sequences), batch_size):
+    batch_sequences = all_sequences[i:i+batch_size]
+    af3_jobs = []
+    
+    for seq_data in batch_sequences:
+        job = {
+            "name": seq_data["name"],
+            "modelSeeds": [1],  # Only 1 seed allowed
+            "sequences": [
+                {
+                    "proteinChain": {
+                        "sequence": seq_data["sequence"],
+                        "count": 1
+                    }
+                },
+                {
+                    "ion": {
+                        "ion": "FE",
+                        "count": 7
+                    }
+                }
+            ],
+            "dialect": "alphafoldserver",
+            "version": 1
+        }
+        af3_jobs.append(job)
+    
+    batch_filename = f'femoco_designs_batch{batch_num}.json'
+    with open(batch_filename, 'w') as f:
+        json.dump(af3_jobs, f, indent=4)
+    
+    print(f"Created {batch_filename} with {len(af3_jobs)} jobs")
+    batch_num += 1
+
+print(f"\nCreated {batch_num-1} batch files")
