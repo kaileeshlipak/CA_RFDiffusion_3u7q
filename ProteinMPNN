@@ -9,18 +9,24 @@ pip install biopython numpy
 #running MPNN to loop over all structures in a directory 
 
 conda activate proteinmpnn
-mkdir -p proteinmpnn_output
 
-for pdb_file in /work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0821/refined_0822/*.pdb; do
-    echo "Processing: $pdb_file"
-    python protein_mpnn_run.py \
-        --pdb_path "$pdb_file" \
-        --pdb_path_chains "A" \
-        --out_folder ./proteinmpnn_output \
-        --num_seq_per_target 10 \
-        --sampling_temp 0.1 \
-        --seed 37
+for pdb_file in /work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0821/refined_0825/*.pdb; do
+   current=$((current + 1))
+   basename=$(basename "$pdb_file" .pdb)
+   echo "[$current/$total_files] Processing: $basename"
+   
+   python protein_mpnn_run.py \
+       --pdb_path "$pdb_file" \
+       --pdb_path_chains "A" \
+       --out_folder ./mpnn_out0826 \
+       --num_seq_per_target 10 \
+       --sampling_temp 0.1
+   
+   echo "[$current/$total_files] Completed: $basename"
+   echo "---"
 done
+
+echo "All $total_files PDB files processed!"
 
 #formatting the fasta sequences better
 import os
