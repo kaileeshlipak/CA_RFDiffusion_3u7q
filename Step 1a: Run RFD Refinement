@@ -6,7 +6,7 @@ eval "$(command conda 'shell.bash' 'hook' 2> /dev/null)"
 conda activate ca_rfd_release 
 export PYTHONPATH=$PYTHONPATH:/work/10391/kaileeshlipak/ls6/CA_RFDiffusion 
 
-INPUT_DIR="/work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0821/unrefined_0822"
+INPUT_DIR="/work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0826"
 CKPT="/work/10391/kaileeshlipak/ls6/CA_RFDiffusion/ca_rfd_refinement.pt"
 
 # Change to the CA_RFDiffusion directory
@@ -28,7 +28,7 @@ for pdb_file in "$INPUT_DIR"/*.pdb; do
         --config-path ./rf_diffusion/config/inference \
         --config-name test_ca_rfd_refinement \
         inference.input_pdb="$pdb_file" \
-        inference.output_prefix="designs_nifD0821/refined_0825/${basename}" \
+        inference.output_prefix="designs_nifD0826/rossmann/${basename}" \
         inference.ckpt_path="$CKPT" \
         inference.ligand=ICS
     
