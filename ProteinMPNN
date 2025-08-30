@@ -10,7 +10,7 @@ pip install biopython numpy
 
 conda activate proteinmpnn
 
-for pdb_file in /work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0826/refined/*.pdb; do
+for pdb_file in /work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0826/nifd/*.pdb; do
    current=$((current + 1))
    basename=$(basename "$pdb_file" .pdb)
    echo "[$current/$total_files] Processing: $basename"
@@ -18,7 +18,7 @@ for pdb_file in /work/10391/kaileeshlipak/ls6/CA_RFDiffusion/designs_nifD0826/re
    python protein_mpnn_run.py \
        --pdb_path "$pdb_file" \
        --pdb_path_chains "A" \
-       --out_folder ./rossmann_0827 \
+       --out_folder ./nifd \
        --num_seq_per_target 10 \
        --sampling_temp 0.1
    
